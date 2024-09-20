@@ -1,6 +1,7 @@
 # Sequential Circuit Verification for a Simple Up and Down Counter
 
-**Overview**
+**Overview**							
+	    		
 This project implements a verification environment for a simple up and down counter, which is a sequential circuit.
 The verification environment is written in SystemVerilog and follows a modular approach inspired by the Universal Verification Methodology (UVM) concepts, without relying on the full UVM library. 
 The counter's behavior is governed by a clock signal, and its output depends on the current inputs as well as the internal state of the counter.
