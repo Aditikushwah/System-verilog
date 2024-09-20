@@ -59,3 +59,6 @@ Verifying the handling of asynchronous events like reset and synchronous operati
 **Conclusion**
 
 This project provides a structured and modular approach to the verification of a sequential up and down counter. By using a combination of random stimulus generation, output monitoring, and scoreboard-based checking, this environment ensures that the counter performs as expected in a variety of scenarios. The environment is also flexible and can be easily extended to support more complex verification tasks.
+
+
+![alt text](C:\Users\aditi\OneDrive\Pictures\Screenshots\Screenshot (161).png)
