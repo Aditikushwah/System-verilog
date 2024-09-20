@@ -1,0 +1,190 @@
+///////////////////////////////////////////////////////////////////////
+class transaction;
+  randc bit [7:0]loadin;
+   bit [7:0]dout;
+endclass
+
+/////////////////generator
+class generator;
+  transaction t;
+  mailbox mbx;
+  event done;
+  integer i;
+  
+  function new(mailbox mbx);
+    this.mbx=mbx;
+  endfunction
+  
+  task run();
+    t=new();
+  t.randomize();
+    mbx.put(t);
+    $display("[GEN]:Data send to driver %0b",t.loadin);
+    @(done);
+  endtask
+endclass
+
+//////////////////////////////////////interface
+interface counter_intf();
+  logic clk, rst, up, load;
+  logic [7:0] loadin;
+  logic [7:0] dout;
+endinterface 
+
+
+
+//////////////////////////////////////////////////driver 
+
+class driver;
+  transaction t;
+  mailbox mbx;
+  event done;
+  
+  virtual counter_intf vif;
+  
+  function new(mailbox mbx);
+    this.mbx=mbx;
+  endfunction
+  
+  task run();
+    t=new();
+  forever begin 
+    mbx.get(t);
+    vif.loadin=t.loadin;
+    $display("[DRV]:Data received from driver through interface %0b",vif.loadin);
+    ->done;
+    @(posedge vif.clk);
+  end
+  endtask
+endclass
+  
+  ////////////////////////////////////////////////////monitor
+  
+  class monitor;
+    transaction t;
+    virtual counter_intf vif;
+    mailbox mbx;
+    
+    function new(mailbox mbx);
+    this.mbx=new();
+  endfunction
+    
+    task run();
+      t=new();
+      forever begin
+      t.loadin=vif.loadin;
+      t.dout=vif.dout;
+      mbx.put(t);
+      
+      $display("[MON]:data send to score board,loadin=%0b dout=%0b",t.loadin,t.dout);
+      @(posedge vif.clk);
+      end
+    endtask
+  endclass
+    
+    
+   ////////////////////////////////////////////scoreboard
+    
+   class scoreboard;
+     mailbox mbx;
+     transaction t;
+     
+     
+     function new(mailbox mbx);
+    this.mbx=new();
+  endfunction
+     
+     task run();
+       t=new();
+       forever begin
+         mbx.get(t);
+         $display("[SCO]:Data received");
+       end
+     endtask
+     
+   endclass
+  //////////////////////////////////////////////////////env
+   class environment;
+  generator gen;
+  driver drv;
+  monitor mon;
+  scoreboard sco;
+  mailbox gdmbx;
+  mailbox msmbx;
+  virtual counter_intf vif;
+  event gddone;
+ 
+      function new(mailbox gdmbx,mailbox msmbx);
+   this.gdmbx=gdmbx;
+    this.msmbx=msmbx;
+  gen =new(gdmbx);
+  drv =new(gdmbx);
+  mon =new(msmbx);
+  sco =new(msmbx);
+  endfunction
+ 
+  task run();
+    gen.done=gddone;
+    drv.done=gddone;
+    drv.vif=vif;
+    mon.vif=vif;
+    
+    fork
+      gen.run();
+      drv.run();
+      mon.run();
+      sco.run();
+    join_any
+  endtask
+endclass
+/////////////////////////////////////////////////tb
+    
+module tb;
+  environment env;
+ 
+  mailbox gdmbx;
+  mailbox msmbx;
+  
+  counter_intf vif();
+  
+  counter dut(vif.clk,vif.rst,vif.up,vif.load,vif.loadin,vif.dout);
+  always #5 vif.clk=~vif.clk;
+  
+  initial 
+  begin
+    gdmbx=new();
+    msmbx=new();
+    env=new(gdmbx,msmbx);
+    env.vif=vif;
+    env.run();
+    #500;
+  $finish;
+  end
+ 
+initial begin
+  vif.clk=0;
+  vif.rst=1;
+  vif.up=0;
+  vif.load=0;
+  #20;
+  vif.load=1;
+  vif.rst=0;
+  #50;
+  vif.load=0;
+  #100;
+  vif.up=1;
+  #100;
+  vif.up=0;
+end
+  initial begin
+  $dumpfile("dump.vcd");
+  $dumpvars;
+  
+end  
+endmodule
+    
+  
+  
+
+
+    
