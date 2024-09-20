@@ -1,5 +1,5 @@
 
-**#Sequential Circuit Verification for a Simple Up and Down Counter**
+#Sequential Circuit Verification for a Simple Up and Down Counter**
 
 **Overview**
 This project implements a verification environment for a simple up and down counter, which is a sequential circuit.
